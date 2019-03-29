@@ -1,0 +1,37 @@
+oocl.def.kafka.server: localhost:9092
+server:
+  servlet:
+    context-path: /command/bookings
+  port: ${PORT:8081}
+  application:
+    name: bookings_service_command
+  cloud:
+    stream:
+      bindings:
+        output:
+          destination: bookings-events-t
+          producer.headerMode: headers
+          contentType: application/json
+          producer.partition-count: 2
+        input:
+          destination: bookings-events-t
+          consumer.headerMode: headers
+          contentType: application/json
+          group: bookings-events-group
+      kafka:
+        streams:
+          binder:
+            brokers: ${oocl.def.kafka.server}
+            configuration:
+              commit.interval.ms: 1000
+              serdeError: logAndContinue
+              default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+              default.value.serde: org.apache.kafka.common.serialization.Serdes$BytesSerde
+              application.server: ${CF_INSTANCE_ADDR:localhst:8081}
+        binder:
+          brokers: ${oocl.def.kafka.server}
+          headers: event_type,kafka_messageKey
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
